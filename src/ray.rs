@@ -1,5 +1,6 @@
-use crate::vec3::*;
+use crate::vec3::{Point3, Vec3};
 
+/* A line in 3D determined by origin and direction */
 pub struct Ray {
     pub origin: Point3,
     pub direction: Vec3,
@@ -10,6 +11,7 @@ impl Ray {
         Ray { origin, direction }
     }
 
+    // Return a point on the line determined by 't'
     pub fn at(&self, t: f64) -> Point3 {
         self.origin + self.direction * t
     }
