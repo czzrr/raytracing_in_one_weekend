@@ -4,18 +4,25 @@ mod ray;
 mod sphere;
 mod util;
 mod vec3;
+mod color;
+mod camera;
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vec3::{write_color, Color, Point3, Vec3};
+use crate::vec3::{Color, Point3};
+use crate::color::write_color;
+use crate::camera::Camera;
+
+use rand;
 
 fn main() {
     // Image settings
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = image_width as f64 / aspect_ratio;
+    let samples_per_pixel = 100;
 
     // World objects
     let mut world = HittableList::new();
@@ -23,15 +30,7 @@ fn main() {
     world.add(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0));
 
     // Camera settings
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Point3::new(0.0, 0.0, 0.0);
-    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+    let cam = Camera::new();
 
     // Render the image
 
@@ -41,16 +40,14 @@ fn main() {
     for row in (0..image_height as i32).rev() {
         eprintln!("Scanlines remaining: {}", row);
         for column in 0..image_width {
-            // u (horizontal) and v (vertical) scale from 0.0 to 1.0
-            let u: f64 = column as f64 / (image_width - 1) as f64;
-            let v: f64 = row as f64 / (image_height - 1.0);
-            // Ray from origin to point on scene
-            let ray = Ray::new(
-                origin,
-                lower_left_corner + horizontal * u + vertical * v - origin,
-            );
-            let pixel_color = ray_color(&ray, &world);
-            write_color(&pixel_color);
+            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+            for _ in 0..samples_per_pixel {
+                let u: f64 = (column as f64 + rand::random::<f64>()) / (image_width - 1) as f64;
+                let v: f64 = (row as f64 + rand::random::<f64>()) / (image_height - 1.0);
+                let ray = cam.get_ray(u, v);
+                pixel_color = pixel_color + ray_color(&ray, &world);
+            }
+            write_color(&pixel_color, samples_per_pixel);
         }
     }
 

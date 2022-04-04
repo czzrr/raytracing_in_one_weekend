@@ -15,15 +15,6 @@ pub type Point3 = Vec3;
 /* A RGB color */
 pub type Color = Vec3;
 
-pub fn write_color(pixel_color: &Color) {
-    println!(
-        "{} {} {}",
-        (255.999 * pixel_color.x) as i32,
-        (255.999 * pixel_color.y) as i32,
-        (255.999 * pixel_color.z) as i32
-    );
-}
-
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
