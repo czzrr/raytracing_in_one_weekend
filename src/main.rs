@@ -11,7 +11,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vec3::{Color, Point3};
+use crate::vec3::{Vec3, Color, Point3};
 use crate::color::write_color;
 use crate::camera::Camera;
 
@@ -55,14 +55,34 @@ fn main() {
 }
 
 fn ray_color(ray: &Ray, world: &impl Hittable) -> Color {
-    let mut rec = HitRecord::default();
-    if world.hit(&ray, 0.0, util::INFINITY, &mut rec) {
-        // map x/y/z to r/g/b
-        (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5
-    } else {
-        // Compute a background gradient based on y-coordinate of ray
-        let unit_direction = ray.direction.unit_vector();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
+    const MAX_DEPTH: u32 = 50;
+
+    fn helper(ray: &Ray, world: &impl Hittable, depth: u32) -> Color {
+        let mut rec = HitRecord::default();
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
+        if world.hit(&ray, 0.001, util::INFINITY, &mut rec) {
+            // Random point in unit sphere tangent to surface hit point
+            //let target = rec.p + rec.normal + Vec3::random_in_unit_sphere();
+
+            // Lambertian random point on unit sphere
+            let target = rec.p + rec.normal + Vec3::random_unit_vector();
+
+            // Random point in normal hemisphere (uniform scatter direction for all angles away from the hit point)
+            //let target = rec.p + Vec3::random_in_hemisphere(&rec.normal);
+
+            // Send ray from hit point towards target point
+            helper(&Ray::new(rec.p, target - rec.p), world, depth - 1) * 0.5
+        } else {
+            // Compute a background gradient based on y-coordinate of ray
+            let unit_direction = ray.direction.unit_vector();
+            let t = 0.5 * (unit_direction.y + 1.0);
+            Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
+        }
     }
+
+    helper(ray, world, MAX_DEPTH)
 }
+

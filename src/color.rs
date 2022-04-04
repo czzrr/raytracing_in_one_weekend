@@ -3,11 +3,9 @@ use crate::util;
 
 pub fn write_color(pixel_color: &Color, samples_per_pixel: u32) {
     let scale = 1.0 / samples_per_pixel as f64;
-    let r = pixel_color.x * scale;
-    let g = pixel_color.y * scale;
-    let b = pixel_color.z * scale;
-
-
+    let r = (pixel_color.x * scale).sqrt();
+    let g = (pixel_color.y * scale).sqrt();
+    let b = (pixel_color.z * scale).sqrt();
 
     println!(
         "{} {} {}",
